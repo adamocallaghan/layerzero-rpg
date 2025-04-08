@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Assets</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="character" width="32" height="32"></canvas>
+    <canvas id="gem" width="16" height="16"></canvas>
+    <canvas id="store" width="64" height="64"></canvas>
+    <canvas id="background" width="800" height="600"></canvas>
+    
+    <script>
+        function drawCharacter() {
+            const canvas = document.getElementById('character');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#3498db';
+            ctx.fillRect(0, 0, 32, 32);
+            console.log('Character:', canvas.toDataURL());
+        }
+
+        function drawGem() {
+            const canvas = document.getElementById('gem');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f1c40f';
+            ctx.fillRect(0, 0, 16, 16);
+            console.log('Gem:', canvas.toDataURL());
+        }
+
+        function drawStore() {
+            const canvas = document.getElementById('store');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(0, 0, 64, 64);
+            console.log('Store:', canvas.toDataURL());
+        }
+
+        function drawBackground() {
+            const canvas = document.getElementById('background');
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(0, 0, 800, 600);
+            console.log('Background:', canvas.toDataURL());
+        }
+
+        drawCharacter();
+        drawGem();
+        drawStore();
+        drawBackground();
+    </script>
+</body>
+</html> 
