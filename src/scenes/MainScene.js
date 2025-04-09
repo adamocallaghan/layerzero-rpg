@@ -71,41 +71,9 @@ export class MainScene extends Phaser.Scene {
     }
 
     createWorld() {
-        // Create a grid of tiles that perfectly align
-        const tileSize = 32; // Our tiles are 32x32 pixels
-        const worldWidth = 25;
-        const worldHeight = 25;
-
-        // First, create a background layer of grass
-        for (let x = 0; x < worldWidth; x++) {
-            for (let y = 0; y < worldHeight; y++) {
-                const grass = this.add.sprite(x * 32, y * 32, 'grass');
-                grass.setOrigin(0, 0);
-            }
-        }
-
-        // Add water border on top
-        for (let x = 0; x < worldWidth; x++) {
-            for (let y = 0; y < worldHeight; y++) {
-                if (x === 0 || y === 0 || x === worldWidth - 1 || y === worldHeight - 1) {
-                    const water = this.add.sprite(x * 32, y * 32, 'water');
-                    water.setOrigin(0, 0);
-                }
-            }
-        }
-
-        // Add paths on top
-        for (let x = 1; x < worldWidth - 1; x++) {
-            for (let y = 1; y < worldHeight - 1; y++) {
-                if ((x === 5 || x === 10 || x === 15 || x === 20) && y > 5 && y < 20) {
-                    const path = this.add.sprite(x * 32, y * 32, 'path');
-                    path.setOrigin(0, 0);
-                } else if ((y === 5 || y === 10 || y === 15 || y === 20) && x > 5 && x < 20) {
-                    const path = this.add.sprite(x * 32, y * 32, 'path');
-                    path.setOrigin(0, 0);
-                }
-            }
-        }
+        // We'll rebuild the tile system from scratch
+        // For now, just set the world bounds for player movement
+        this.physics.world.setBounds(0, 0, 800, 800);
     }
 
     createPlayerAnimations() {
