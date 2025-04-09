@@ -78,12 +78,36 @@ export class MainScene extends Phaser.Scene {
         const numTilesX = Math.ceil(800 / 32);
         const numTilesY = Math.ceil(800 / 32);
         
-        // Place grass tiles across the entire game space
+        // First layer: Place grass tiles across the entire game space
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
-                let tile = this.add.sprite(x * 32, y * 32, 'grass');
-                tile.setOrigin(0, 0);
-                tile.setDisplaySize(32, 32);
+                let grass = this.add.sprite(x * 32, y * 32, 'grass');
+                grass.setOrigin(0, 0);
+                grass.setDisplaySize(32, 32);
+            }
+        }
+
+        // Second layer: Add paths
+        for (let y = 0; y < numTilesY; y++) {
+            for (let x = 0; x < numTilesX; x++) {
+                // Create cross-shaped paths
+                if (x === 10 || y === 10) {
+                    let path = this.add.sprite(x * 32, y * 32, 'path');
+                    path.setOrigin(0, 0);
+                    path.setDisplaySize(32, 32);
+                }
+            }
+        }
+
+        // Third layer: Add water border
+        for (let y = 0; y < numTilesY; y++) {
+            for (let x = 0; x < numTilesX; x++) {
+                // Place water on edges
+                if (x === 0 || x === numTilesX - 1 || y === 0 || y === numTilesY - 1) {
+                    let water = this.add.sprite(x * 32, y * 32, 'water');
+                    water.setOrigin(0, 0);
+                    water.setDisplaySize(32, 32);
+                }
             }
         }
     }
