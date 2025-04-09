@@ -15,9 +15,15 @@ export class MainScene extends Phaser.Scene {
 
     preload() {
         // Load game assets
+        // Small tiles (32x32)
         this.load.image('grass', 'assets/images/Tiles/Grass_Middle.png');
         this.load.image('path', 'assets/images/Tiles/Path_Middle.png');
         this.load.image('water', 'assets/images/Tiles/Water_Middle.png');
+        // Large tiles (64x128)
+        this.load.image('path_large', 'assets/images/Tiles/Path_Tile.png');
+        this.load.image('water_large', 'assets/images/Tiles/Water_Tile.png');
+        this.load.image('cliff_large', 'assets/images/Tiles/Cliff_Tile.png');
+
         this.load.spritesheet('player', 'assets/images/Player/Player.png', {
             frameWidth: 32,
             frameHeight: 32
@@ -88,9 +94,18 @@ export class MainScene extends Phaser.Scene {
         }
 
         // Second layer: Add paths
+        // Add one large path tile (64x128) at an intersection
+        const largePath = this.add.sprite(9 * 32, 9 * 32, 'path_large');
+        largePath.setOrigin(0, 0);
+        largePath.setDisplaySize(64, 128);
+
+        // Add regular path tiles to connect to the large path
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
-                // Create cross-shaped paths
+                // Skip where the large path tile is
+                if (x >= 9 && x <= 10 && y >= 9 && y <= 12) continue;
+                
+                // Create paths connecting to large path tile
                 if (x === 10 || y === 10) {
                     let path = this.add.sprite(x * 32, y * 32, 'path');
                     path.setOrigin(0, 0);
@@ -99,9 +114,28 @@ export class MainScene extends Phaser.Scene {
             }
         }
 
-        // Third layer: Add water border
+        // Third layer: Add cliff tiles at strategic corners
+        // Top-left cliff
+        const cliffTL = this.add.sprite(32, 32, 'cliff_large');
+        cliffTL.setOrigin(0, 0);
+        cliffTL.setDisplaySize(64, 128);
+        // Bottom-right cliff
+        const cliffBR = this.add.sprite(800 - 96, 800 - 160, 'cliff_large');
+        cliffBR.setOrigin(0, 0);
+        cliffBR.setDisplaySize(64, 128);
+
+        // Fourth layer: Add water border with one large water tile in a corner
+        // Add large water tile in top-right corner
+        const largeWater = this.add.sprite(800 - 96, 32, 'water_large');
+        largeWater.setOrigin(0, 0);
+        largeWater.setDisplaySize(64, 128);
+
+        // Add regular water tiles for the rest of the border
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
+                // Skip where the large water tile is
+                if (x >= numTilesX - 3 && x < numTilesX - 1 && y >= 1 && y <= 4) continue;
+                
                 // Place water on edges
                 if (x === 0 || x === numTilesX - 1 || y === 0 || y === numTilesY - 1) {
                     let water = this.add.sprite(x * 32, y * 32, 'water');
