@@ -36,8 +36,8 @@ export class MainScene extends Phaser.Scene {
         // Create player
         this.player = this.physics.add.sprite(400, 300, 'player');
         this.player.setCollideWorldBounds(true);
-        this.player.setSize(24, 24); // Adjust hitbox to be slightly smaller than sprite
-        this.player.setOffset(4, 8); // Center the hitbox
+        this.player.setSize(24, 24);
+        this.player.setOffset(4, 8);
 
         // Create multiple gems
         const gemPositions = [
@@ -71,31 +71,38 @@ export class MainScene extends Phaser.Scene {
     }
 
     createWorld() {
-        // Create a 25x25 grid of tiles
-        const tileSize = 32;
+        // Create a grid of tiles that perfectly align
+        const tileSize = 32; // Our tiles are 32x32 pixels
         const worldWidth = 25;
         const worldHeight = 25;
 
-        // Create water border
+        // First, create a background layer of grass
+        for (let x = 0; x < worldWidth; x++) {
+            for (let y = 0; y < worldHeight; y++) {
+                const grass = this.add.sprite(x * 32, y * 32, 'grass');
+                grass.setOrigin(0, 0);
+            }
+        }
+
+        // Add water border on top
         for (let x = 0; x < worldWidth; x++) {
             for (let y = 0; y < worldHeight; y++) {
                 if (x === 0 || y === 0 || x === worldWidth - 1 || y === worldHeight - 1) {
-                    this.add.image(x * tileSize, y * tileSize, 'water');
+                    const water = this.add.sprite(x * 32, y * 32, 'water');
+                    water.setOrigin(0, 0);
                 }
             }
         }
 
-        // Create grass and path tiles
+        // Add paths on top
         for (let x = 1; x < worldWidth - 1; x++) {
             for (let y = 1; y < worldHeight - 1; y++) {
-                // Create paths
                 if ((x === 5 || x === 10 || x === 15 || x === 20) && y > 5 && y < 20) {
-                    this.add.image(x * tileSize, y * tileSize, 'path');
+                    const path = this.add.sprite(x * 32, y * 32, 'path');
+                    path.setOrigin(0, 0);
                 } else if ((y === 5 || y === 10 || y === 15 || y === 20) && x > 5 && x < 20) {
-                    this.add.image(x * tileSize, y * tileSize, 'path');
-                } else {
-                    // Fill rest with grass
-                    this.add.image(x * tileSize, y * tileSize, 'grass');
+                    const path = this.add.sprite(x * 32, y * 32, 'path');
+                    path.setOrigin(0, 0);
                 }
             }
         }
@@ -134,33 +141,18 @@ export class MainScene extends Phaser.Scene {
         });
         this.anims.create({
             key: 'walk-up',
-            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 11 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 12, end: 14 }),
             frameRate: 10,
             repeat: -1
         });
     }
 
-    createStoreUI() {
-        // Create a semi-transparent background
-        const graphics = this.add.graphics();
-        graphics.fillStyle(0x000000, 0.5);
-        graphics.fillRect(200, 100, 400, 400);
-        
-        // Create store UI elements
-        const title = this.add.text(300, 120, 'Store', { fontSize: '32px', fill: '#fff' });
-        const description = this.add.text(220, 180, 'Convert your gems to tokens!', { fontSize: '24px', fill: '#fff' });
-        const gemCount = this.add.text(220, 220, `Current Gems: ${this.gemCount}`, { fontSize: '24px', fill: '#fff' });
-        const convertButton = this.add.text(300, 300, 'Convert to Tokens', { fontSize: '24px', fill: '#fff' })
-            .setInteractive()
-            .on('pointerdown', () => this.convertGemsToTokens());
-
-        // Group all UI elements
-        this.storeUI = this.add.container(0, 0, [graphics, title, description, gemCount, convertButton]);
-        this.storeUI.setVisible(false);
-    }
-
     update() {
-        // Handle player movement
+        if (this.storeOpen) {
+            this.player.setVelocity(0, 0);
+            return;
+        }
+
         const speed = 200;
         let moving = false;
 
@@ -214,12 +206,6 @@ export class MainScene extends Phaser.Scene {
                 this.player.anims.play('stand-down', true);
             }
         }
-
-        // Update store UI gem count
-        if (this.storeUI && this.storeOpen) {
-            const gemCountText = this.storeUI.list[3];
-            gemCountText.setText(`Current Gems: ${this.gemCount}`);
-        }
     }
 
     collectGem(player, gem) {
@@ -232,9 +218,26 @@ export class MainScene extends Phaser.Scene {
         if (!this.storeOpen) {
             this.storeUI.setVisible(true);
             this.storeOpen = true;
-            // Stop player movement while store is open
-            this.player.setVelocity(0, 0);
         }
+    }
+
+    createStoreUI() {
+        // Create a semi-transparent background
+        const graphics = this.add.graphics();
+        graphics.fillStyle(0x000000, 0.5);
+        graphics.fillRect(200, 100, 400, 400);
+        
+        // Create store UI elements
+        const title = this.add.text(300, 120, 'Store', { fontSize: '32px', fill: '#fff' });
+        const description = this.add.text(220, 180, 'Convert your gems to tokens!', { fontSize: '24px', fill: '#fff' });
+        const gemCount = this.add.text(220, 220, `Current Gems: ${this.gemCount}`, { fontSize: '24px', fill: '#fff' });
+        const convertButton = this.add.text(300, 300, 'Convert to Tokens', { fontSize: '24px', fill: '#fff' })
+            .setInteractive()
+            .on('pointerdown', () => this.convertGemsToTokens());
+
+        // Group all UI elements
+        this.storeUI = this.add.container(0, 0, [graphics, title, description, gemCount, convertButton]);
+        this.storeUI.setVisible(false);
     }
 
     convertGemsToTokens() {
