@@ -63,7 +63,7 @@ export class MainScene extends Phaser.Scene {
             this.chests.add(chest);
         });
 
-        // Add some trees around the world
+        // Add trees as physical obstacles
         const treePositions = [
             { x: 150, y: 150 },
             { x: 650, y: 150 },
@@ -74,16 +74,25 @@ export class MainScene extends Phaser.Scene {
             { x: 600, y: 400 }
         ];
 
+        // Create a physics group for trees
+        this.trees = this.physics.add.staticGroup();
         treePositions.forEach(pos => {
-            const tree = this.add.sprite(pos.x, pos.y, 'tree');
-            tree.setScale(0.8); // Keep the tree scaling as it was
+            const tree = this.trees.create(pos.x, pos.y, 'tree');
+            tree.setScale(0.8);
+            // Make collision box smaller and position it at the trunk
+            tree.setSize(20, 20);  // Small collision box for the trunk
+            tree.setOffset(tree.displayWidth/2 - 10, tree.displayHeight * 0.75);  // Center horizontally, move down to trunk
         });
 
+        // Add collisions
+        this.physics.add.collider(this.player, this.trees);
         this.physics.add.overlap(this.player, this.chests, this.collectChest, null, this);
 
         // Create bank (formerly store)
         this.bank = this.physics.add.sprite(600, 400, 'house');
-        this.bank.setScale(0.8); // Adjust house size as needed
+        this.bank.setScale(0.8);
+        this.bank.setImmovable(true);
+        this.physics.add.collider(this.player, this.bank);
         this.physics.add.overlap(this.player, this.bank, this.openStore, null, this);
 
         // Setup controls
