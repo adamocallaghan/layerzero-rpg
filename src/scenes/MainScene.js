@@ -91,8 +91,6 @@ export class MainScene extends Phaser.Scene {
         // Create bank (formerly store)
         this.bank = this.physics.add.sprite(600, 400, 'house');
         this.bank.setScale(0.8);
-        this.bank.setImmovable(true);
-        this.physics.add.collider(this.player, this.bank);
         this.physics.add.overlap(this.player, this.bank, this.openStore, null, this);
 
         // Setup controls
