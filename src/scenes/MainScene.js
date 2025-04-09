@@ -71,9 +71,21 @@ export class MainScene extends Phaser.Scene {
     }
 
     createWorld() {
-        // We'll rebuild the tile system from scratch
-        // For now, just set the world bounds for player movement
+        // Set world bounds
         this.physics.world.setBounds(0, 0, 800, 800);
+
+        // Calculate number of tiles needed for width and height
+        const numTilesX = Math.ceil(800 / 32);
+        const numTilesY = Math.ceil(800 / 32);
+        
+        // Place grass tiles across the entire game space
+        for (let y = 0; y < numTilesY; y++) {
+            for (let x = 0; x < numTilesX; x++) {
+                let tile = this.add.sprite(x * 32, y * 32, 'grass');
+                tile.setOrigin(0, 0);
+                tile.setDisplaySize(32, 32);
+            }
+        }
     }
 
     createPlayerAnimations() {
