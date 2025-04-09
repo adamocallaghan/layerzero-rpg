@@ -9,23 +9,35 @@ export class MainScene extends Phaser.Scene {
         this.cursors = null;
         this.storeUI = null;
         this.storeOpen = false;
+        this.playerDirection = 'down';
+        this.playerMoving = false;
     }
 
     preload() {
         // Load game assets
-        this.load.image('background', 'assets/images/background.png');
-        this.load.image('character', 'assets/images/character.png');
+        this.load.image('grass', 'assets/images/Tiles/Grass_Middle.png');
+        this.load.image('path', 'assets/images/Tiles/Path_Middle.png');
+        this.load.image('water', 'assets/images/Tiles/Water_Middle.png');
+        this.load.spritesheet('player', 'assets/images/Player/Player.png', {
+            frameWidth: 32,
+            frameHeight: 32
+        });
         this.load.image('gem', 'assets/images/gem.png');
         this.load.image('store', 'assets/images/store.png');
     }
 
     create() {
-        // Create background
-        this.add.image(400, 300, 'background');
+        // Create tilemap
+        this.createWorld();
+
+        // Create player animations
+        this.createPlayerAnimations();
 
         // Create player
-        this.player = this.physics.add.sprite(100, 100, 'character');
+        this.player = this.physics.add.sprite(400, 300, 'player');
         this.player.setCollideWorldBounds(true);
+        this.player.setSize(24, 24); // Adjust hitbox to be slightly smaller than sprite
+        this.player.setOffset(4, 8); // Center the hitbox
 
         // Create multiple gems
         const gemPositions = [
@@ -44,7 +56,7 @@ export class MainScene extends Phaser.Scene {
 
         this.physics.add.overlap(this.player, this.gems, this.collectGem, null, this);
 
-        // Create store (moved to visible area)
+        // Create store
         this.store = this.physics.add.sprite(600, 400, 'store');
         this.physics.add.overlap(this.player, this.store, this.openStore, null, this);
 
@@ -56,6 +68,76 @@ export class MainScene extends Phaser.Scene {
 
         // Create store UI (initially hidden)
         this.createStoreUI();
+    }
+
+    createWorld() {
+        // Create a 25x25 grid of tiles
+        const tileSize = 32;
+        const worldWidth = 25;
+        const worldHeight = 25;
+
+        // Create water border
+        for (let x = 0; x < worldWidth; x++) {
+            for (let y = 0; y < worldHeight; y++) {
+                if (x === 0 || y === 0 || x === worldWidth - 1 || y === worldHeight - 1) {
+                    this.add.image(x * tileSize, y * tileSize, 'water');
+                }
+            }
+        }
+
+        // Create grass and path tiles
+        for (let x = 1; x < worldWidth - 1; x++) {
+            for (let y = 1; y < worldHeight - 1; y++) {
+                // Create paths
+                if ((x === 5 || x === 10 || x === 15 || x === 20) && y > 5 && y < 20) {
+                    this.add.image(x * tileSize, y * tileSize, 'path');
+                } else if ((y === 5 || y === 10 || y === 15 || y === 20) && x > 5 && x < 20) {
+                    this.add.image(x * tileSize, y * tileSize, 'path');
+                } else {
+                    // Fill rest with grass
+                    this.add.image(x * tileSize, y * tileSize, 'grass');
+                }
+            }
+        }
+    }
+
+    createPlayerAnimations() {
+        // Standing animations
+        this.anims.create({
+            key: 'stand-down',
+            frames: [{ key: 'player', frame: 0 }],
+            frameRate: 10
+        });
+        this.anims.create({
+            key: 'stand-right',
+            frames: [{ key: 'player', frame: 1 }],
+            frameRate: 10
+        });
+        this.anims.create({
+            key: 'stand-up',
+            frames: [{ key: 'player', frame: 2 }],
+            frameRate: 10
+        });
+
+        // Walking animations
+        this.anims.create({
+            key: 'walk-down',
+            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 5 }),
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'walk-right',
+            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 8 }),
+            frameRate: 10,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'walk-up',
+            frames: this.anims.generateFrameNumbers('player', { start: 9, end: 11 }),
+            frameRate: 10,
+            repeat: -1
+        });
     }
 
     createStoreUI() {
@@ -79,20 +161,58 @@ export class MainScene extends Phaser.Scene {
 
     update() {
         // Handle player movement
+        const speed = 200;
+        let moving = false;
+
         if (this.cursors.left.isDown) {
-            this.player.setVelocityX(-200);
+            this.player.setVelocityX(-speed);
+            this.playerDirection = 'left';
+            moving = true;
         } else if (this.cursors.right.isDown) {
-            this.player.setVelocityX(200);
+            this.player.setVelocityX(speed);
+            this.playerDirection = 'right';
+            moving = true;
         } else {
             this.player.setVelocityX(0);
         }
 
         if (this.cursors.up.isDown) {
-            this.player.setVelocityY(-200);
+            this.player.setVelocityY(-speed);
+            this.playerDirection = 'up';
+            moving = true;
         } else if (this.cursors.down.isDown) {
-            this.player.setVelocityY(200);
+            this.player.setVelocityY(speed);
+            this.playerDirection = 'down';
+            moving = true;
         } else {
             this.player.setVelocityY(0);
+        }
+
+        // Update player animation
+        if (moving) {
+            if (this.playerDirection === 'left') {
+                this.player.setFlipX(true);
+                this.player.anims.play('walk-right', true);
+            } else if (this.playerDirection === 'right') {
+                this.player.setFlipX(false);
+                this.player.anims.play('walk-right', true);
+            } else if (this.playerDirection === 'up') {
+                this.player.anims.play('walk-up', true);
+            } else if (this.playerDirection === 'down') {
+                this.player.anims.play('walk-down', true);
+            }
+        } else {
+            if (this.playerDirection === 'left') {
+                this.player.setFlipX(true);
+                this.player.anims.play('stand-right', true);
+            } else if (this.playerDirection === 'right') {
+                this.player.setFlipX(false);
+                this.player.anims.play('stand-right', true);
+            } else if (this.playerDirection === 'up') {
+                this.player.anims.play('stand-up', true);
+            } else if (this.playerDirection === 'down') {
+                this.player.anims.play('stand-down', true);
+            }
         }
 
         // Update store UI gem count
