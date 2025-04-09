@@ -23,13 +23,15 @@ export class MainScene extends Phaser.Scene {
         this.load.image('path_large', 'assets/images/Tiles/Path_Tile.png');
         this.load.image('water_large', 'assets/images/Tiles/Water_Tile.png');
         this.load.image('cliff_large', 'assets/images/Tiles/Cliff_Tile.png');
+        // Decorative elements
+        this.load.image('house', 'assets/images/Outdoor decoration/House.png');
+        this.load.image('tree', 'assets/images/Outdoor decoration/Oak_Tree.png');
+        this.load.image('chest', 'assets/images/Outdoor decoration/Chest.png');
 
         this.load.spritesheet('player', 'assets/images/Player/Player.png', {
             frameWidth: 32,
             frameHeight: 32
         });
-        this.load.image('gem', 'assets/images/gem.png');
-        this.load.image('store', 'assets/images/store.png');
     }
 
     create() {
@@ -45,8 +47,8 @@ export class MainScene extends Phaser.Scene {
         this.player.setSize(24, 24);
         this.player.setOffset(4, 8);
 
-        // Create multiple gems
-        const gemPositions = [
+        // Create multiple chests
+        const chestPositions = [
             { x: 500, y: 500 },
             { x: 300, y: 200 },
             { x: 700, y: 400 },
@@ -54,23 +56,41 @@ export class MainScene extends Phaser.Scene {
             { x: 800, y: 300 }
         ];
 
-        this.gems = this.physics.add.group();
-        gemPositions.forEach(pos => {
-            const gem = this.physics.add.sprite(pos.x, pos.y, 'gem');
-            this.gems.add(gem);
+        this.chests = this.physics.add.group();
+        chestPositions.forEach(pos => {
+            const chest = this.physics.add.sprite(pos.x, pos.y, 'chest');
+            chest.setScale(1); // Chest is already the right size (32x32)
+            this.chests.add(chest);
         });
 
-        this.physics.add.overlap(this.player, this.gems, this.collectGem, null, this);
+        // Add some trees around the world
+        const treePositions = [
+            { x: 150, y: 150 },
+            { x: 650, y: 150 },
+            { x: 150, y: 650 },
+            { x: 650, y: 650 },
+            { x: 400, y: 200 },
+            { x: 200, y: 400 },
+            { x: 600, y: 400 }
+        ];
 
-        // Create store
-        this.store = this.physics.add.sprite(600, 400, 'store');
-        this.physics.add.overlap(this.player, this.store, this.openStore, null, this);
+        treePositions.forEach(pos => {
+            const tree = this.add.sprite(pos.x, pos.y, 'tree');
+            tree.setScale(0.8); // Keep the tree scaling as it was
+        });
+
+        this.physics.add.overlap(this.player, this.chests, this.collectChest, null, this);
+
+        // Create bank (formerly store)
+        this.bank = this.physics.add.sprite(600, 400, 'house');
+        this.bank.setScale(0.8); // Adjust house size as needed
+        this.physics.add.overlap(this.player, this.bank, this.openStore, null, this);
 
         // Setup controls
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Create UI
-        this.gemsText = this.add.text(16, 16, 'Gems: 0', { fontSize: '32px', fill: '#fff' });
+        this.chestsText = this.add.text(16, 16, 'Chests: 0', { fontSize: '32px', fill: '#fff' });
 
         // Create store UI (initially hidden)
         this.createStoreUI();
@@ -246,13 +266,13 @@ export class MainScene extends Phaser.Scene {
         }
     }
 
-    collectGem(player, gem) {
-        gem.destroy();
+    collectChest(player, chest) {
+        chest.destroy();
         this.gemCount += 10;
-        this.gemsText.setText('Gems: ' + this.gemCount);
+        this.chestsText.setText('Chests: ' + this.gemCount);
     }
 
-    openStore(player, store) {
+    openStore(player, bank) {
         if (!this.storeOpen) {
             this.storeUI.setVisible(true);
             this.storeOpen = true;
@@ -266,15 +286,15 @@ export class MainScene extends Phaser.Scene {
         graphics.fillRect(200, 100, 400, 400);
         
         // Create store UI elements
-        const title = this.add.text(300, 120, 'Store', { fontSize: '32px', fill: '#fff' });
-        const description = this.add.text(220, 180, 'Convert your gems to tokens!', { fontSize: '24px', fill: '#fff' });
-        const gemCount = this.add.text(220, 220, `Current Gems: ${this.gemCount}`, { fontSize: '24px', fill: '#fff' });
+        const title = this.add.text(300, 120, 'Bank', { fontSize: '32px', fill: '#fff' });
+        const description = this.add.text(220, 180, 'Convert your treasure to tokens!', { fontSize: '24px', fill: '#fff' });
+        const chestCount = this.add.text(220, 220, `Current Chests: ${this.gemCount}`, { fontSize: '24px', fill: '#fff' });
         const convertButton = this.add.text(300, 300, 'Convert to Tokens', { fontSize: '24px', fill: '#fff' })
             .setInteractive()
             .on('pointerdown', () => this.convertGemsToTokens());
 
         // Group all UI elements
-        this.storeUI = this.add.container(0, 0, [graphics, title, description, gemCount, convertButton]);
+        this.storeUI = this.add.container(0, 0, [graphics, title, description, chestCount, convertButton]);
         this.storeUI.setVisible(false);
     }
 
@@ -288,7 +308,7 @@ export class MainScene extends Phaser.Scene {
             
             // Reset gems after conversion
             this.gemCount = 0;
-            this.gemsText.setText('Gems: ' + this.gemCount);
+            this.chestsText.setText('Chests: ' + this.gemCount);
             
             // Close store UI
             this.storeUI.setVisible(false);
