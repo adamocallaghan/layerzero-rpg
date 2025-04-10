@@ -346,10 +346,17 @@ export class MainScene extends Phaser.Scene {
 
     openStore(player, bank) {
         if (!this.storeOpen) {
+            // Position UI in center of camera view
+            const camera = this.cameras.main;
+            const centerX = camera.width / 2;
+            const centerY = camera.height / 2;
+            
+            this.storeUI.setPosition(centerX - 200, centerY - 200);  // Center the 400x400 UI
             this.storeUI.setVisible(true);
             this.storeOpen = true;
-            // Update the chest count text when opening the store
-            const chestCountText = this.storeUI.list[3]; // The chest count text is the fourth element in the container
+            
+            // Update the chest count text
+            const chestCountText = this.storeUI.list[3];
             chestCountText.setText(`Current Chests: ${this.gemCount}`);
         }
     }
@@ -358,19 +365,44 @@ export class MainScene extends Phaser.Scene {
         // Create a semi-transparent background
         const graphics = this.add.graphics();
         graphics.fillStyle(0x000000, 0.5);
-        graphics.fillRect(200, 100, 400, 400);
+        graphics.fillRect(0, 0, 400, 400);
         
-        // Create store UI elements
-        const title = this.add.text(300, 120, 'Bank', { fontSize: '32px', fill: '#fff' });
-        const description = this.add.text(220, 180, 'Convert your treasure to tokens!', { fontSize: '24px', fill: '#fff' });
-        const chestCount = this.add.text(220, 220, `Current Chests: ${this.gemCount}`, { fontSize: '24px', fill: '#fff' });
-        const convertButton = this.add.text(300, 300, 'Convert to Tokens', { fontSize: '24px', fill: '#fff' })
+        // Create store UI elements with word wrap
+        const title = this.add.text(200, 20, 'Bank', { 
+            fontSize: '32px', 
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5, 0);
+
+        const description = this.add.text(200, 80, 'Convert your treasure to tokens!', { 
+            fontSize: '24px', 
+            fill: '#fff',
+            align: 'center',
+            wordWrap: { width: 360 }  // Leave 20px margin on each side
+        }).setOrigin(0.5, 0);
+
+        const chestCount = this.add.text(200, 160, `Current Chests: ${this.gemCount}`, { 
+            fontSize: '24px', 
+            fill: '#fff',
+            align: 'center',
+            wordWrap: { width: 360 }
+        }).setOrigin(0.5, 0);
+
+        const convertButton = this.add.text(200, 240, 'Convert to Tokens', { 
+            fontSize: '24px', 
+            fill: '#fff',
+            align: 'center',
+            wordWrap: { width: 360 }
+        })
+            .setOrigin(0.5, 0)
             .setInteractive()
             .on('pointerdown', () => this.convertGemsToTokens());
 
         // Group all UI elements
         this.storeUI = this.add.container(0, 0, [graphics, title, description, chestCount, convertButton]);
         this.storeUI.setVisible(false);
+        // Make UI stay fixed relative to camera
+        this.storeUI.setScrollFactor(0);
     }
 
     convertGemsToTokens() {
@@ -379,7 +411,7 @@ export class MainScene extends Phaser.Scene {
             console.log(`Converting ${this.gemCount} gems to tokens`);
             
             // For now, just simulate the transaction
-            alert(`Converting ${this.gemCount} gems to tokens...\n(This would trigger a blockchain transaction in the real game)`);
+            alert(`Converting ${this.gemCount} chests to tokens...\n(This would trigger a blockchain transaction in the real game)`);
             
             // Reset gems after conversion
             this.gemCount = 0;
@@ -389,7 +421,7 @@ export class MainScene extends Phaser.Scene {
             this.storeUI.setVisible(false);
             this.storeOpen = false;
         } else {
-            alert('You need to collect some gems first!');
+            alert('You need to collect some chests first!');
         }
     }
 } 
