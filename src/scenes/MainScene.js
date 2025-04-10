@@ -283,6 +283,9 @@ export class MainScene extends Phaser.Scene {
         if (!this.storeOpen) {
             this.storeUI.setVisible(true);
             this.storeOpen = true;
+            // Update the chest count text when opening the store
+            const chestCountText = this.storeUI.list[3]; // The chest count text is the fourth element in the container
+            chestCountText.setText(`Current Chests: ${this.gemCount}`);
         }
     }
 
