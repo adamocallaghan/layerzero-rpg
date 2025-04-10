@@ -41,37 +41,64 @@ export class MainScene extends Phaser.Scene {
         // Create player animations
         this.createPlayerAnimations();
 
-        // Create player
-        this.player = this.physics.add.sprite(400, 300, 'player');
+        // Create player - spawn in center of expanded world
+        this.player = this.physics.add.sprite(800, 800, 'player');
         this.player.setCollideWorldBounds(true);
         this.player.setSize(24, 24);
         this.player.setOffset(4, 8);
 
-        // Create multiple chests
+        // Setup camera to follow player
+        this.cameras.main.setBounds(0, 0, 1600, 1600);
+        this.cameras.main.startFollow(this.player, true);
+        this.cameras.main.setZoom(1);  // Adjust zoom level if needed
+
+        // Create multiple chests spread across the expanded world
         const chestPositions = [
+            // Top-left quadrant
             { x: 500, y: 500 },
             { x: 300, y: 200 },
-            { x: 700, y: 400 },
-            { x: 200, y: 600 },
-            { x: 800, y: 300 }
+            // Top-right quadrant
+            { x: 1200, y: 300 },
+            { x: 1400, y: 500 },
+            // Bottom-left quadrant
+            { x: 200, y: 1200 },
+            { x: 500, y: 1400 },
+            // Bottom-right quadrant
+            { x: 1300, y: 1200 },
+            { x: 1400, y: 1400 },
+            // Center area
+            { x: 800, y: 800 }
         ];
 
         this.chests = this.physics.add.group();
         chestPositions.forEach(pos => {
             const chest = this.physics.add.sprite(pos.x, pos.y, 'chest');
-            chest.setScale(1); // Chest is already the right size (32x32)
+            chest.setScale(1);
             this.chests.add(chest);
         });
 
-        // Add trees as physical obstacles
+        // Add trees as physical obstacles spread across the expanded world
         const treePositions = [
+            // Top-left quadrant
             { x: 150, y: 150 },
-            { x: 650, y: 150 },
-            { x: 150, y: 650 },
-            { x: 650, y: 650 },
             { x: 400, y: 200 },
-            { x: 200, y: 400 },
-            { x: 600, y: 400 }
+            // Top-right quadrant
+            { x: 1200, y: 150 },
+            { x: 1400, y: 300 },
+            // Bottom-left quadrant
+            { x: 200, y: 1200 },
+            { x: 400, y: 1400 },
+            // Bottom-right quadrant
+            { x: 1200, y: 1200 },
+            { x: 1400, y: 1400 },
+            // Center area
+            { x: 750, y: 750 },
+            { x: 850, y: 850 },
+            // Additional decorative trees
+            { x: 600, y: 1000 },
+            { x: 1000, y: 600 },
+            { x: 300, y: 800 },
+            { x: 800, y: 300 }
         ];
 
         // Create a physics group for trees
@@ -97,21 +124,22 @@ export class MainScene extends Phaser.Scene {
         this.cursors = this.input.keyboard.createCursorKeys();
 
         // Create UI
-        this.chestsText = this.add.text(16, 16, 'Chests: 0', { fontSize: '32px', fill: '#fff' });
+        this.chestsText = this.add.text(16, 16, 'Chests: 0', { fontSize: '32px', fill: '#fff' })
+            .setScrollFactor(0);  // This makes the text stay fixed on screen
 
         // Create store UI (initially hidden)
         this.createStoreUI();
     }
 
     createWorld() {
-        // Set world bounds
-        this.physics.world.setBounds(0, 0, 800, 800);
+        // Set expanded world bounds (2x2 of original size)
+        this.physics.world.setBounds(0, 0, 1600, 1600);
 
         // Calculate number of tiles needed for width and height
-        const numTilesX = Math.ceil(800 / 32);
-        const numTilesY = Math.ceil(800 / 32);
+        const numTilesX = Math.ceil(1600 / 32);
+        const numTilesY = Math.ceil(1600 / 32);
         
-        // First layer: Place grass tiles across the entire game space
+        // First layer: Place grass tiles across the entire expanded game space
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
                 let grass = this.add.sprite(x * 32, y * 32, 'grass');
@@ -120,20 +148,24 @@ export class MainScene extends Phaser.Scene {
             }
         }
 
-        // Second layer: Add paths
-        // Add one large path tile (64x128) at an intersection
-        const largePath = this.add.sprite(9 * 32, 9 * 32, 'path_large');
-        largePath.setOrigin(0, 0);
-        largePath.setDisplaySize(64, 128);
+        // Second layer: Add paths in various patterns across quadrants
+        // Original quadrant path (top-left)
+        this.createLargePathWithConnections(9 * 32, 9 * 32);
 
-        // Add regular path tiles to connect to the large path
+        // Second quadrant path (top-right)
+        this.createLargePathWithConnections(35 * 32, 12 * 32);
+
+        // Third quadrant path (bottom-left)
+        this.createLargePathWithConnections(15 * 32, 35 * 32);
+
+        // Fourth quadrant path (bottom-right)
+        this.createLargePathWithConnections(40 * 32, 38 * 32);
+
+        // Add additional connecting paths
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
-                // Skip where the large path tile is
-                if (x >= 9 && x <= 10 && y >= 9 && y <= 12) continue;
-                
-                // Create paths connecting to large path tile
-                if (x === 10 || y === 10) {
+                // Create main crossroads
+                if (x === 25 || y === 25) {
                     let path = this.add.sprite(x * 32, y * 32, 'path');
                     path.setOrigin(0, 0);
                     path.setDisplaySize(32, 32);
@@ -141,35 +173,68 @@ export class MainScene extends Phaser.Scene {
             }
         }
 
-        // Third layer: Add cliff tiles at strategic corners
-        // Top-left cliff
-        const cliffTL = this.add.sprite(32, 32, 'cliff_large');
-        cliffTL.setOrigin(0, 0);
-        cliffTL.setDisplaySize(64, 128);
-        // Bottom-right cliff
-        const cliffBR = this.add.sprite(800 - 96, 800 - 160, 'cliff_large');
-        cliffBR.setOrigin(0, 0);
-        cliffBR.setDisplaySize(64, 128);
+        // Third layer: Add cliff tiles at strategic locations
+        const cliffPositions = [
+            { x: 32, y: 32 },                    // Top-left original
+            { x: 1600 - 96, y: 1600 - 160 },     // Bottom-right original
+            { x: 1600 - 96, y: 32 },             // Top-right
+            { x: 32, y: 1600 - 160 },            // Bottom-left
+            { x: 800 - 96, y: 800 - 160 },       // Center
+            { x: 400, y: 1200 },                 // Bottom quadrant
+            { x: 1200, y: 400 }                  // Right quadrant
+        ];
 
-        // Fourth layer: Add water border with one large water tile in a corner
-        // Add large water tile in top-right corner
-        const largeWater = this.add.sprite(800 - 96, 32, 'water_large');
-        largeWater.setOrigin(0, 0);
-        largeWater.setDisplaySize(64, 128);
+        cliffPositions.forEach(pos => {
+            const cliff = this.add.sprite(pos.x, pos.y, 'cliff_large');
+            cliff.setOrigin(0, 0);
+            cliff.setDisplaySize(64, 128);
+        });
 
-        // Add regular water tiles for the rest of the border
+        // Fourth layer: Add water features
+        const waterPositions = [
+            { x: 1600 - 96, y: 32 },             // Original top-right
+            { x: 32, y: 1600 - 160 },            // Bottom-left
+            { x: 800 - 96, y: 800 - 160 },       // Center
+            { x: 400, y: 32 },                   // Top quadrant
+            { x: 1200, y: 1400 }                 // Bottom-right quadrant
+        ];
+
+        waterPositions.forEach(pos => {
+            const water = this.add.sprite(pos.x, pos.y, 'water_large');
+            water.setOrigin(0, 0);
+            water.setDisplaySize(64, 128);
+        });
+
+        // Add regular water tiles for the expanded border
         for (let y = 0; y < numTilesY; y++) {
             for (let x = 0; x < numTilesX; x++) {
-                // Skip where the large water tile is
-                if (x >= numTilesX - 3 && x < numTilesX - 1 && y >= 1 && y <= 4) continue;
-                
-                // Place water on edges
                 if (x === 0 || x === numTilesX - 1 || y === 0 || y === numTilesY - 1) {
                     let water = this.add.sprite(x * 32, y * 32, 'water');
                     water.setOrigin(0, 0);
                     water.setDisplaySize(32, 32);
                 }
             }
+        }
+    }
+
+    // Helper method to create a large path tile with its connections
+    createLargePathWithConnections(x, y) {
+        // Add large path tile
+        const largePath = this.add.sprite(x, y, 'path_large');
+        largePath.setOrigin(0, 0);
+        largePath.setDisplaySize(64, 128);
+
+        // Add connecting paths
+        for (let i = -5; i < 15; i++) {
+            // Horizontal connections
+            let pathH = this.add.sprite((x/32 + i) * 32, y + 64, 'path');
+            pathH.setOrigin(0, 0);
+            pathH.setDisplaySize(32, 32);
+            
+            // Vertical connections
+            let pathV = this.add.sprite(x + 32, (y/32 + i) * 32, 'path');
+            pathV.setOrigin(0, 0);
+            pathV.setDisplaySize(32, 32);
         }
     }
 
