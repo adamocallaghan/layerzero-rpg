@@ -5,7 +5,7 @@ export class MainScene extends Phaser.Scene {
         super({ key: 'MainScene' });
         this.player = null;
         this.gemCount = 0;
-        this.gemsText = null;
+        this.chestsText = null;
         this.cursors = null;
         this.storeUI = null;
         this.storeOpen = false;
@@ -66,8 +66,8 @@ export class MainScene extends Phaser.Scene {
             // Bottom-right quadrant
             { x: 1300, y: 1200 },
             { x: 1400, y: 1400 },
-            // Center area
-            { x: 800, y: 800 }
+            // Center area - moved away from player spawn
+            { x: 900, y: 900 }  // Moved from 800,800 to 900,900
         ];
 
         this.chests = this.physics.add.group();
@@ -123,8 +123,9 @@ export class MainScene extends Phaser.Scene {
         // Setup controls
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        // Create UI
-        this.chestsText = this.add.text(16, 16, 'Chests: 0', { fontSize: '32px', fill: '#fff' })
+        // Initialize the chest count display with the starting value
+        this.gemCount = 0;  // Ensure we start at 0
+        this.chestsText = this.add.text(16, 16, 'Chests: ' + this.gemCount, { fontSize: '32px', fill: '#fff' })
             .setScrollFactor(0);  // This makes the text stay fixed on screen
 
         // Create store UI (initially hidden)
@@ -340,7 +341,7 @@ export class MainScene extends Phaser.Scene {
 
     collectChest(player, chest) {
         chest.destroy();
-        this.gemCount += 10;
+        this.gemCount += 1;
         this.chestsText.setText('Chests: ' + this.gemCount);
     }
 
